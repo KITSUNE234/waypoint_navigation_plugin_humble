@@ -1,85 +1,73 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.16)
 project(waypoint_navigation_plugin)
 
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17)
+endif()
+
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rviz_common REQUIRED)
+find_package(rviz_rendering REQUIRED)
+find_package(interactive_markers REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
+find_package(pluginlib REQUIRED)
+find_package(tf2 REQUIRED)
 find_package(yaml-cpp REQUIRED)
-find_package(catkin REQUIRED COMPONENTS rviz rosbag)
-catkin_package()
 
-include_directories(${catkin_INCLUDE_DIRS})
-link_directories(${catkin_LIBRARY_DIRS})
+find_package(Qt5 REQUIRED COMPONENTS Widgets)
 
-if(rviz_QT_VERSION VERSION_LESS "5")
-  find_package(Qt4 COMPONENTS QtCore QtGui REQUIRED)
-  include(${QT_USE_FILE})
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_CURRENT_SOURCE_DIR}/ui)
 
-else()
-  find_package(Qt5 REQUIRED COMPONENTS Core Widgets OpenGL)
-  # set variable names already used with Qt4
-  set(QT_LIBRARIES Qt5::Widgets)
-  set(QTVERSION ${Qt5Widgets_VERSION})
-endif()
-
-## Qt signals and slots to avoid defining "emit", "slots",
-## etc because they can conflict with boost signals, so define QT_NO_KEYWORDS here.
 add_definitions(-DQT_NO_KEYWORDS)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -frounding-math -Werror=return-type")
 
-if(rviz_QT_VERSION VERSION_LESS "5")
-
-  # Header files that need Qt Moc pre-processing for use with Qt signals, etc:
-  qt4_wrap_cpp(MOC_FILES
-    src/waypoint_nav_frame.h
-    src/waypoint_nav_tool.h
-  )
-
-  # Convert the Qt Signals and Slots for QWidget events
-  qt4_wrap_ui(UIC_FILES
-    ui/WaypointNavigation.ui
-  )
-else()
-  # Header files that need Qt Moc pre-processing for use with Qt signals, etc:
-  qt5_wrap_cpp(MOC_FILES
-    src/waypoint_nav_frame.h
-    src/waypoint_nav_tool.h
-  )
-
-  # Convert the Qt Signals and Slots for QWidget events
-  qt5_wrap_ui(UIC_FILES
-    ui/WaypointNavigation.ui
-  )
-endif()
-
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
-
-# Plugin Source
 set(SOURCE_FILES
   src/waypoint_nav_frame.cpp
   src/waypoint_nav_tool.cpp
-  ${MOC_FILES}
 )
 
-set(LIB_NAME waypoint_nav_plugin)
-add_library(${LIB_NAME} ${SOURCE_FILES} ${MOC_SOURCES} ${UIC_FILES})
-target_link_libraries(${LIB_NAME}
-  ${catkin_LIBRARIES} ${QT_LIBRARIES} ${YAML_CPP_LIBRARIES})
+add_library(waypoint_nav_plugin SHARED ${SOURCE_FILES})
 
-## Install rules
+target_include_directories(waypoint_nav_plugin PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>"
+  "$<INSTALL_INTERFACE:include>"
+)
 
-install(DIRECTORY src/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  FILES_MATCHING PATTERN "*.h")
+ament_target_dependencies(waypoint_nav_plugin
+  rclcpp
+  rviz_common
+  rviz_rendering
+  interactive_markers
+  nav_msgs
+  geometry_msgs
+  visualization_msgs
+  pluginlib
+  tf2
+)
 
-install(TARGETS ${LIB_NAME}
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
+target_link_libraries(waypoint_nav_plugin
+  Qt5::Widgets
+  yaml-cpp
+)
 
-## Install rules
-install(FILES
-  waypoint_nav_plugin_description.xml
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+pluginlib_export_plugin_description_file(rviz_common waypoint_nav_plugin_description.xml)
 
-install(DIRECTORY media/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/media)
+install(TARGETS waypoint_nav_plugin
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+)
 
-install(DIRECTORY icons/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/icons)
+install(FILES waypoint_nav_plugin_description.xml
+  DESTINATION share/${PROJECT_NAME}
+)
+
+install(DIRECTORY media/ DESTINATION share/${PROJECT_NAME}/media)
+install(DIRECTORY icons/ DESTINATION share/${PROJECT_NAME}/icons)
+
+ament_package()

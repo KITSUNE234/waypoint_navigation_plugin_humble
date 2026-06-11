@@ -1,21 +1,26 @@
-<package format="2">
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
   <name>waypoint_navigation_plugin</name>
   <version>0.1.0</version>
-  <description>
-     Tool for planting waypoints in rviz.
-  </description>
+  <description>Tool for planting waypoints in rviz2.</description>
   <maintainer email="tdineshd@gmail.com">Dinesh Thakur</maintainer>
   <license>BSD</license>
 
-  <author>Dinesh Thakur</author>
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <buildtool_depend>catkin</buildtool_depend>
-
-  <depend>rviz</depend>
-  <depend>rosbag</depend>
+  <depend>rclcpp</depend>
+  <depend>rviz_common</depend>
+  <depend>rviz_rendering</depend>
+  <depend>interactive_markers</depend>
+  <depend>nav_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>pluginlib</depend>
+  <depend>tf2</depend>
 
   <export>
-    <rosdoc config="${prefix}/rosdoc.yaml"/>
+    <build_type>ament_cmake</build_type>
     <rviz plugin="${prefix}/waypoint_nav_plugin_description.xml"/>
   </export>
 </package>
